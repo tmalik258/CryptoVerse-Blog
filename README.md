@@ -31,8 +31,8 @@ To get started with CryptoInsights Blog, follow these simple steps:
 
 ### Installation
 
-1. Clone the repository: `git clone https://github.com/tmalik258/cryptoverse.git`
-2. Navigate to the project directory: `cd cryptoverse`
+1. Clone the repository: `git clone https://github.com/tmalik258/cryptoverse-blog.git`
+2. Navigate to the project directory: `cd cryptoverse-blog`
 3. Install dependencies: `npm install`
 
 ### Usage
