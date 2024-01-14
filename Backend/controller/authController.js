@@ -1,6 +1,7 @@
 const Joi = require( "joi" );
 const bcryptjs = require( 'bcryptjs' );
 const User = require( '../models/user' );
+const UserDTO = require( '../dto/user' );
 
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,25}$/;
 
@@ -8,7 +9,7 @@ const authController = {
 	async register(req, res, next) {
 		// 1. Validate user input
 		const userRegisterSchema = Joi.object({
-			username: Joi.string().alphanum().min(3).max(20).required(),
+			username: Joi.string().min(3).max(20).required(),
 			email: Joi.string().email().required(),
 			name: Joi.string().max(30).required(),
 			password: Joi.string().pattern(passwordPattern).required(),
@@ -56,10 +57,61 @@ const authController = {
         } );
 
         const user = await userToRegister.save();
-        // 6. response send
-        return res.status( 201 ).json( { user } );
+
+		// 6. response send
+		const userDto = new UserDTO( user );
+
+        return res.status( 201 ).json( { user: userDto } );
 	},
-	async login() {},
+	async login ( req, res, next )
+	{
+		// 1. validate user input
+
+		const userLoginSchema = Joi.object( {
+			username: Joi.string().min( 5 ).max( 30 ).required(),
+			password: Joi.string().pattern( passwordPattern ).required()
+		} );
+
+		const { error } = userLoginSchema.validate( req.body );
+
+		// 2. If validation error, return error
+		
+		if (error) {
+			return next( error );
+		}
+
+		// 3. match username and password
+
+		const { username, password } = req.body;
+		let user;
+		try {
+			user = await User.findOne( { username } );
+			if (!user) {
+				const error = {
+					status: 401,
+					message: "Invalid username"
+				}
+
+				return next( error );
+			}
+			const matchPass = await bcryptjs.compare( password, user.password );
+
+			if (!matchPass) {
+				const error = {
+					status: 401,
+					message: "Invalid Password"
+				}
+				
+				return next( error );
+			}
+		} catch (error) {
+			return next( error );
+		}
+		// 4. return response
+		const userDto = new UserDTO(user);
+
+		return res.status( 200 ).json( { user: userDto } );
+	},
 	async logout() {},
 };
 
